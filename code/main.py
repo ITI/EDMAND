@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
+from __future__ import unicode_literals
+
 import gevent
 import sys
 import timeit
+import broker
 from gevent import select
 from gevent.queue import Queue, Empty
-from pybroker import *
 from pprint import pprint
 from parse_packet import parse_packet
 from parse_operation import parse_operation
@@ -33,42 +35,33 @@ TIMEOUT = 5
 
 
 def listener():
-    epl = endpoint("listener")
-    mql = message_queue("bro/event", epl)
-    icsq = epl.incoming_connection_status()
-    
-    epl.listen(9999, "127.0.0.1")
-    select.select([icsq.fd()],[],[])
-    msgs = icsq.want_pop()
-    
-    for m in msgs:
-        print("incoming connection", m.peer_name, m.status)
-        assert(m.peer_name == "connector")
-        assert(m.status == incoming_connection_status.tag_established)
-    
+    ep = broker.Endpoint()
+    sub = ep.make_subscriber("edmand")
+    ep.listen("127.0.0.1", 9999)
+
     total_time = 0
     count = 0
     while True:
-        select.select([mql.fd()], [], [])
-        msgs = mql.want_pop()
-        for m in msgs:
-            start = timeit.default_timer()
-            event_name = m[0] 
-            if(event_name.as_string() == "FlowLevel::packet_get"):
-                raw_packet_queue.put_nowait(m[1])
-            if(event_name.as_string() == "ProtocolLevel::protocol_get"):
-                raw_operation_queue.put_nowait(m[1])
-            if(event_name.as_string() == "DataLevel::data_get"):
-                raw_data_value_queue.put_nowait(m[1])
-            if(event_name.as_string() == "bro_done"):
-                #print("Listener quit!")
-                if count != 0:
-                    print("Listener time: " + str(total_time/count))
+        (t, msg)= sub.get()
+        start = timeit.default_timer()
+        t = str(t) 
+        ev = broker.bro.Event(msg)
+        if t == "edmand/packet_get":
+            raw_packet_queue.put_nowait(ev.args())
+        if t == "edmand/protocol_get":
+            raw_operation_queue.put_nowait(ev.args())
+        if t == "edmand/data_get":
+            raw_data_value_queue.put_nowait(ev.args())
+        if t == "edmand/bro_done":
+            ep.shutdown()
+            #print("Listener quit!")
+            if count != 0:
+                print("Listener time: " + str(total_time/count))
                 return;
-            #print("got message")
-            total_time += timeit.default_timer() - start
-            count += 1
-            gevent.sleep(0)
+        #print("got message")
+        total_time += timeit.default_timer() - start
+        count += 1
+        gevent.sleep(0)
 
 
 def packet_parser(n):
@@ -211,8 +204,8 @@ def anomaly_manager(n):
         while True:
             start = timeit.default_timer()
             anomaly = anomaly_queue.get(timeout=TIMEOUT)
-            r ../trace/dnp3_test8_with_anomaly.pcap end_point.bro
-            total_time += timeit.default_timer() - otart
+            mng.manage(anomaly)
+            total_time += timeit.default_timer() - start
             count += 1
             gevent.sleep(0)
     except Empty:

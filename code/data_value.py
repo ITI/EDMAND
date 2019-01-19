@@ -1,3 +1,5 @@
+import datetime
+
 class DataValue:
     def __init__(self,
                 ts=None,  
@@ -42,7 +44,7 @@ class DataValue:
     value = {6}
     is_event = {7}
 '''.format(
-            self.ts,
+            datetime.datetime.fromtimestamp(self.ts),
             self.holder_ip,
             self.protocol,
             self.uid,

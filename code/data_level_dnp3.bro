@@ -194,7 +194,7 @@ function get_range_spec_code(qua_field: count): count
 }
 
 # Get the additional addresses from the header
-event dnp3_header_block(c: connection, is_orig: bool, start: count, len: count, ctrl: count, dest_addr: count, src_addr: count)
+event dnp3_header_block(c: connection, is_orig: bool, len: count, ctrl: count, dest_addr: count, src_addr: count)
 {
     g_uid = cat(src_addr, ":", dest_addr);
 }
@@ -537,6 +537,8 @@ event dnp3_counter_16woFlag(c: connection, is_orig: bool, count_value: count)
 event bro_done()
 {
     total_time += packet_time;
-    local content_time: interval = total_time / total_count;
-    print fmt("Content_bro: %s", content_time);
+    if(total_count > 0) {
+        local content_time: interval = total_time / total_count;
+        print fmt("Content_bro: %s", content_time);
+    }
 }

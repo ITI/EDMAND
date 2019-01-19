@@ -1,114 +1,73 @@
-from pybroker import *
-from packet import Packet
+from packet import Packet 
+import datetime
 
-def parse_conn(conn_rec, packet):
-    fields = conn_rec.fields()
-
-    # Connection tuple (uid included)
-    assert(fields[0].valid())
-    d = fields[0].get()
-    assert(d.which() == data.tag_record)
-    conn_tuple_rec = d.as_record()
-    tuple_fields = conn_tuple_rec.fields()
-    orig_h = str(tuple_fields[0].get().as_address())
-    orig_p = str(tuple_fields[1].get().as_port())
-    resp_h = str(tuple_fields[2].get().as_address())
-    resp_p = str(tuple_fields[3].get().as_port())
-    conn_tuple = (orig_h, orig_p, resp_h, resp_p)
-    packet.conn = conn_tuple
+def parse_conn(conn, packet):
+    # Connection tuple 
+    conn_tuple = conn[0]
+    orig_h = str(conn_tuple[0])
+    orig_p = str(conn_tuple[1])
+    resp_h = str(conn_tuple[2])
+    resp_p = str(conn_tuple[3])
+    packet.conn = (orig_h, orig_p, resp_h, resp_p)
     #print(packet.conn)
 
     # Service
-    assert(fields[5].valid())
-    d = fields[5].get()
-    assert(d.which() == data.tag_set)
-    service_set = d.as_set()
-    packet.service = [] 
-    for j in range(service_set.size()):
-        packet.service.append(service_set[j].as_string())
+    packet.service = list(map(str, conn[5]))
     #print(packet.service)
 
-    # uid 
-    d = fields[7].get()
-    assert(d.which() == data.tag_string)
-    uid = d.as_string()
-    #print(uid)
+    # conn_id
+    conn_id = str(conn[7]) 
+    #print(conn_id)
 
 
-def parse_hdr(hdr_rec, packet):
-    fields = hdr_rec.fields()
-
+def parse_hdr(hdr, packet):
     # IPv4
-    if fields[0].valid():
+    if hdr[0] is not None:
         #print("ip4")
-        d = fields[0].get()
-        assert(d.which() == data.tag_record)
-        ip4_hdr_rec = d.as_record()
-        ip4_hdr_fields = ip4_hdr_rec.fields()
-        packet.packet_len = ip4_hdr_fields[2].get().as_count()
-        packet.sender = str(ip4_hdr_fields[6].get().as_address())
-        packet.receiver = str(ip4_hdr_fields[7].get().as_address())
+        packet.packet_len = hdr[0][2].value
+        packet.sender = str(hdr[0][6])
+        packet.receiver = str(hdr[0][7])
         #print("packet_len: {}, src: {}, dst: {}".format(packet.packet_len, packet.sender, packet.receiver))
 
     # IPv6
-    elif fields[1].valid(): 
+    elif hdr[1] is not None: 
         #print("ip6")
-        d = fields[1].get()
-        assert(d.which() == data.tag_record)
-        ip4_hdr_rec = d.as_record()
-        ip4_hdr_fields = ip4_hdr_rec.fields()
-        packet.packet_len = ip4_hdr_fields[2].get().as_count()
-        packet.sender = str(ip4_hdr_fields[5].get().as_address())
-        packet.receiver = str(ip4_hdr_fields[6].get().as_address())
+        packet.packet_len = hdr[0][2].value
+        packet.sender = str(hdr[0][5])
+        packet.receiver = str(hdr[0][6])
         #print("packet_len: {}, src: {}, dst: {}".format(packet.packet_len, packet.sender, packet.receiver))
 
     # TCP
-    if fields[2].valid():
+    if hdr[2] is not None:
         packet.protocol_type = "TCP"
         #print(packet.protocol_type)
-        d = fields[2].get()
-        assert(d.which() == data.tag_record)
-        tcp_hdr_rec = d.as_record()
-        packet.tcp_flag = tcp_hdr_rec.fields()[6].get().as_count()
+        packet.tcp_flag = hdr[2][6].value
         #print("tcp_flag: {}".format(packet.tcp_flag))
 
     # UDP
-    elif fields[3].valid():
+    elif hdr[3] is not None:
         packet.protocol_type = "UDP"
         #print(packet.protocol_type)
 
     # ICMP
-    elif fields[4].valid():
+    elif hdr[4] is not None:
         packet.protocol_type = "ICMP"
         #print(packet.protocol_type)
  
 
-def parse_packet(packet_info):
-    assert(packet_info.which() == data.tag_record)
-    packet_rec = packet_info.as_record()
-    fields = packet_rec.fields()
+def parse_packet(args):
+    packet_info = args[0]
+    packet = Packet()
 
     # Timestamp
-    assert(fields[0].valid())
-    ts = fields[0].get()
-    assert(ts.which() == data.tag_time)
-    # Connection
-    assert(fields[1].valid())
-    conn = fields[1].get()
-    assert(conn.which() == data.tag_record)
-    conn_rec = conn.as_record()
-    # Packet header
-    assert(fields[2].valid())
-    hdr = fields[2].get()
-    assert(hdr.which() == data.tag_record)
-    hdr_rec = hdr.as_record()
-   
-    packet = Packet()
-    packet.ts = ts.as_time().value
+    packet.ts = (packet_info[0] - datetime.datetime(1970, 1, 1)).total_seconds()
     #print(packet.ts)
 
-    parse_conn(conn_rec, packet)
-    parse_hdr(hdr_rec, packet)
+    # Connection
+    parse_conn(packet_info[1], packet)
+
+    # Packet header
+    parse_hdr(packet_info[2], packet)
+
     #print(packet)
-    #print
     return packet

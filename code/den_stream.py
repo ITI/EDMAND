@@ -5,7 +5,7 @@ import math
 LAMBDA = 0.005
 MU = 20.0
 BETA = 0.2
-T_p = math.ceil(math.log(BETA*MU/(BETA*MU-1), 2)/LAMBDA)
+T_p = seconds=math.ceil(math.log(BETA*MU/(BETA*MU-1), 2)/LAMBDA)
 
 def fading(t):
     return 2**(-LAMBDA * t)
@@ -142,8 +142,8 @@ class DenStream1D():
 
 
     def merge(self, p, ts):
-        #print(p)
         p = float(p)
+        #print(p)
         rst = True 
         nearest_p = None
         dis_p = None

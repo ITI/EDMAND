@@ -1,3 +1,4 @@
+import datetime
 import numpy as np
 import threading
 import time
@@ -8,7 +9,7 @@ from pprint import pprint
 
 
 class AnomalyManager():
-    max_time_gap = 120
+    max_time_gap = 2*60 
     priority_th = 0.5
     confi_th1 = 0.95
     confi_th2 = 0.98

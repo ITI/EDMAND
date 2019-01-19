@@ -1,3 +1,5 @@
+import datetime
+
 class Operation:
     def __init__(self,
                 ts=None,  
@@ -42,7 +44,7 @@ class Operation:
     fn = {6}
     is_orig = {7}
 '''.format(
-            self.ts,
+            datetime.datetime.fromtimestamp(self.ts),
             self.orig_ip,
             self.resp_ip,
             self.service,

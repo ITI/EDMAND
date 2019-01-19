@@ -29,10 +29,10 @@ export {
     global protocol_get: event(info: Info);
 }
 
-##event protocol_get(info: Info)
-##{
-##    print(cat(info$fn, " ", info$is_orig));
-##}
+#event protocol_get(info: Info)
+#{
+#    print(cat(info$fn, " ", info$is_orig));
+#}
 
 @load protocol_level_modbus.bro
 @load protocol_level_dnp3.bro

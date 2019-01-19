@@ -1,3 +1,5 @@
+import datetime
+
 class Flow:
     def __init__(self,
                 start=None,
@@ -74,8 +76,8 @@ class Flow:
     mean_iat_ba = {14}
     std_iat_ba = {15}
 '''.format(
-            self.start,
-            self.end,
+            datetime.datetime.fromtimestamp(self.start),
+            datetime.datetime.fromtimestamp(self.end),
             self.orig,
             self.resp,
             self.protocol_type,

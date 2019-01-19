@@ -1,71 +1,31 @@
-from pybroker import *
 from operation import Operation 
+import datetime
 
-def parse_conn(conn_rec, operation):
-    fields = conn_rec.fields()
-
-    # Connection tuple
-    assert(fields[0].valid())
-    d = fields[0].get()
-    assert(d.which() == data.tag_record)
-    conn_tuple_rec = d.as_record()
-    tuple_fields = conn_tuple_rec.fields()
-    orig_h = str(tuple_fields[0].get().as_address())
-    resp_h = str(tuple_fields[2].get().as_address())
-    operation.orig_ip = orig_h 
-    operation.resp_ip = resp_h 
-
-
-def parse_operation(protocol_info):
-    assert(protocol_info.which() == data.tag_record)
-    protocol_rec = protocol_info.as_record()
-    fields = protocol_rec.fields()
-
+def parse_operation(args):
+    protocol_info = args[0]
     operation = Operation()
 
     # Timestamp
-    assert(fields[0].valid())
-    ts = fields[0].get()
-    assert(ts.which() == data.tag_time)
-    operation.ts = ts.as_time().value
+    operation.ts = (protocol_info[0] - datetime.datetime(1970, 1, 1)).total_seconds()
 
     # Connection
-    assert(fields[1].valid())
-    conn = fields[1].get()
-    assert(conn.which() == data.tag_record)
-    conn_rec = conn.as_record()
-    parse_conn(conn_rec, operation) 
+    operation.orig_ip = str(protocol_info[1][0][0])
+    operation.resp_ip = str(protocol_info[1][0][2])
 
     # Control Protocol (service) 
-    assert(fields[2].valid())
-    service = fields[2].get()
-    assert(service.which() == data.tag_string)
-    operation.service = service.as_string()
+    operation.service = str(protocol_info[2])
    
     # uid 
-    assert(fields[3].valid())
-    uid = fields[3].get()
-    assert(uid.which() == data.tag_string)
-    operation.uid = uid.as_string()
+    operation.uid = str(protocol_info[3])
 
     # Function code 
-    assert(fields[4].valid())
-    fc = fields[4].get()
-    assert(fc.which() == data.tag_count)
-    operation.fc = fc.as_count()
+    operation.fc = protocol_info[4].value
 
     # Function name 
-    assert(fields[5].valid())
-    fn = fields[5].get()
-    assert(fn.which() == data.tag_string)
-    operation.fn = fn.as_string()
+    operation.fn = str(protocol_info[5])
 
     # Is from teh originator side 
-    assert(fields[6].valid())
-    is_orig = fields[6].get()
-    assert(is_orig.which() == data.tag_boolean)
-    operation.is_orig = is_orig.as_bool()
+    operation.is_orig = protocol_info[6]
  
     #print(operation)
-    #print
     return operation

@@ -1,4 +1,4 @@
-module StatsCol;
+module ProtocolLevel;
 
 global g_uid: string;  # global variable to store the unit id
 
@@ -7,7 +7,7 @@ global total_time: interval = 0sec;
 global total_count: count = 0;
 
 # Get the additional addresses from the header
-event dnp3_header_block(c: connection, is_orig: bool, start: count, len: count, ctrl: count, dest_addr: count, src_addr: count)
+event dnp3_header_block(c: connection, is_orig: bool, len: count, ctrl: count, dest_addr: count, src_addr: count)
 {
     dnp3_start = current_time();
     g_uid = cat(src_addr, ":", dest_addr);
@@ -35,6 +35,8 @@ event dnp3_application_response_header(c: connection, is_orig: bool, application
 
 event bro_done()
 {
-    local dnp3_time: interval = total_time / total_count;
-    print fmt("DNP3_bro: %s", dnp3_time);
+    if(total_count > 0) {
+        local dnp3_time: interval = total_time / total_count;
+        print fmt("DNP3_bro: %s", dnp3_time);
+    }
 }

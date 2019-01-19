@@ -1,4 +1,3 @@
-from pybroker import *
 from operation import Operation
 from anomaly import OperationAnomaly
 from inc_mean_std import ExpMeanSTD
@@ -8,7 +7,7 @@ import math
 TIME_NORM = 180.0
 COUNT_NORM = 100.0
 COUNT_EACH_NORM = 100.0
-PERIODIC_CHECK_TIME = 600
+PERIODIC_CHECK_TIME = 10*60
 CONFI_TH = 0.6
 
 def sigmoid(x):

@@ -1,3 +1,5 @@
+import datetime
+
 class Packet:
     def __init__(self,
                 ts=None,  
@@ -41,7 +43,7 @@ class Packet:
     packet_len = {6} 
     conn = {7}
 '''.format(
-            self.ts,
+            datetime.datetime.fromtimestamp(self.ts),
             self.sender,
             self.receiver,
             self.protocol_type,

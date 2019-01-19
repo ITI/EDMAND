@@ -1,3 +1,5 @@
+import datetime
+
 class Anomaly:
     def __init__(self,
                 ts=None,  
@@ -73,7 +75,7 @@ class Anomaly:
     mean = {6}
     dev = {7}
 '''.format(
-            self.ts,
+            datetime.datetime.fromtimestamp(self.ts),
             self.desp,
             self.confi,
             self.anomaly_type,
